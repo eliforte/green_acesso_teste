@@ -6,6 +6,14 @@ import { LoteEntity } from '@/core/domain/entities';
 @Injectable()
 class LoteRepository implements LoteRepositoryPort {
   constructor(private readonly prisma: PrismaService) {}
+  private mapToDomain(prismaModel: any): LoteEntity {
+    return new LoteEntity({
+      id: prismaModel.id,
+      nome: prismaModel.nome,
+      ativo: prismaModel.ativo,
+      criado_em: prismaModel.criado_em,
+    });
+  }
 
   public async findByNome(nome: string): Promise<LoteEntity | null> {
     const lote = await this.prisma.lote.findFirst({
@@ -96,6 +104,18 @@ class LoteRepository implements LoteRepositoryPort {
       ativo: newLote.ativo,
       criado_em: newLote.criado_em,
     });
+  }
+
+  async findByNomes(nomes: string[]): Promise<LoteEntity[]> {
+    const lotes = await this.prisma.lote.findMany({
+      where: {
+        nome: {
+          in: nomes,
+        },
+      },
+    });
+    
+    return lotes.map(lote => this.mapToDomain(lote));
   }
 }
 

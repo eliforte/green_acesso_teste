@@ -9,6 +9,18 @@ import { PrismaService } from '../connection';
 class BoletoRepository implements BoletoRepositoryPort {
   constructor(private readonly prisma: PrismaService) {}
 
+  public mapToDomain(prismaModel: any): BoletoEntity {
+    return new BoletoEntity({
+      id: prismaModel.id,
+      nome_sacado: prismaModel.nome_sacado,
+      id_lote: prismaModel.id_lote,
+      valor: prismaModel.valor,
+      linha_digitavel: prismaModel.linha_digitavel,
+      ativo: prismaModel.ativo,
+      criado_em: prismaModel.criado_em,
+    });
+  }
+
   public async findAll(filter?: BoletoFilter): Promise<BoletoEntity[]> {
     const whereClause: any = {
       ativo: true,
@@ -140,18 +152,6 @@ class BoletoRepository implements BoletoRepositoryPort {
       }
       
       return savedBoletos;
-    });
-  }
-
-  private mapToDomain(boleto: any): BoletoEntity {
-    return new BoletoEntity({
-      id: boleto.id,
-      nome_sacado: boleto.nome_sacado,
-      id_lote: boleto.id_lote,
-      valor: Number(boleto.valor),
-      linha_digitavel: boleto.linha_digitavel,
-      ativo: boleto.ativo,
-      criado_em: boleto.criado_em,
     });
   }
 }

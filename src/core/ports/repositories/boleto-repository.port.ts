@@ -8,6 +8,7 @@ interface BoletoFilter {
 }
 
 interface BoletoRepositoryPort {
+  mapToDomain(prismaModel: any): BoletoEntity;
   save(boleto: BoletoEntity): Promise<BoletoEntity>;
   saveMany(boletos: BoletoEntity[]): Promise<BoletoEntity[]>;
   findAll(filter?: BoletoFilter): Promise<BoletoEntity[]>;
