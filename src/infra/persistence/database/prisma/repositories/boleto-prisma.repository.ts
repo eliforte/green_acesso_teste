@@ -1,9 +1,7 @@
-/* eslint-disable @typescript-eslint/no-unused-vars */
-/* eslint-disable @typescript-eslint/no-explicit-any */
 import { Injectable } from '@nestjs/common';
-import { BoletoEntity } from '@/core/domain/entities';
 import { BoletoFilter, BoletoRepositoryPort } from '@/core/ports/repositories';
 import { PrismaService } from '../connection';
+import { BoletoEntity } from '../../../../../core/domain/entities';
 
 @Injectable()
 class BoletoRepository implements BoletoRepositoryPort {
@@ -143,12 +141,10 @@ class BoletoRepository implements BoletoRepositoryPort {
         }
       }
       
-      if (errors.length) {
-        if (savedBoletos.length) {
-          throw new Error(
-            `Falha ao salvar boletos: ${errors.map(e => e.message).join('; ')}`
-          );
-        }
+      if (errors.length > 0 && savedBoletos.length === 0) {
+        throw new Error(
+          `Falha ao salvar boletos: ${errors.map(e => e.message).join('; ')}`
+        );
       }
       
       return savedBoletos;

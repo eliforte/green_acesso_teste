@@ -1,9 +1,8 @@
 import { PrismaService } from '../connection';
 import { Test, TestingModule } from '@nestjs/testing';
 import { BoletoRepository } from './boleto-prisma.repository';
-import { BoletoEntity } from '@/core/domain/entities';
+import { BoletoEntity } from '../../../../../core/domain/entities';
 import { BoletoFilter } from '@/core/ports/repositories';
-import { Decimal } from '@prisma/client/runtime/library';
 
 describe('BoletoRepository', () => {
   let repository: BoletoRepository;
@@ -13,7 +12,7 @@ describe('BoletoRepository', () => {
     id: 1,
     nome_sacado: 'JOSE DA SILVA',
     id_lote: 3,
-    valor: new Decimal('182.54'),
+    valor: 182.54,
     linha_digitavel: '123456123456123456',
     ativo: true,
     criado_em: new Date('2023-01-01')
@@ -32,11 +31,7 @@ describe('BoletoRepository', () => {
               create: jest.fn(),
               update: jest.fn()
             },
-            $transaction: jest.fn((callback) => callback({
-              boleto: {
-                create: jest.fn().mockResolvedValue(mockBoletoPrisma)
-              }
-            }))
+            $transaction: jest.fn()
           }
         }
       ],
@@ -135,7 +130,7 @@ describe('BoletoRepository', () => {
         data: {
           nome_sacado: 'JOSE DA SILVA',
           id_lote: 3,
-          valor: new Decimal('182.54'),
+          valor: 182.54,
           linha_digitavel: '123456123456123456',
           ativo: true
         }
@@ -156,7 +151,7 @@ describe('BoletoRepository', () => {
 
       const mockUpdatedBoleto = {
         ...mockBoletoPrisma,
-        valor: new Decimal(200)
+        valor: 200
       };
 
       jest.spyOn(prismaService.boleto, 'update').mockResolvedValue(mockUpdatedBoleto);
@@ -182,7 +177,7 @@ describe('BoletoRepository', () => {
 
   describe('saveMany', () => {
     it('should save multiple boletos in a transaction', async () => {
-      const boletos = [
+      const mockBoletos = [
         new BoletoEntity({
           nome_sacado: 'JOSE DA SILVA',
           id_lote: 3,
@@ -190,15 +185,32 @@ describe('BoletoRepository', () => {
           linha_digitavel: '123456123456123456'
         }),
         new BoletoEntity({
-          nome_sacado: 'MARCOS ROBERTO',
-          id_lote: 6,
-          valor: 178.20,
-          linha_digitavel: '123456123456123456'
+          nome_sacado: 'MARIA OLIVEIRA',
+          id_lote: 5,
+          valor: 256.87,
+          linha_digitavel: '987654987654987654'
         })
       ];
 
-      const result = await repository.saveMany(boletos);
-
+      (prismaService.$transaction as jest.Mock).mockImplementation(async (callback) => {
+        const tx = {
+          boleto: {
+            findFirst: jest.fn().mockResolvedValue(null),
+            create: jest.fn().mockImplementation((params) => {
+              return {
+                id: Math.floor(Math.random() * 1000),
+                ...params.data,
+                criado_em: new Date()
+              };
+            })
+          }
+        };
+        
+        return await callback(tx);
+      });
+    
+      const result = await repository.saveMany(mockBoletos);
+    
       expect(prismaService.$transaction).toHaveBeenCalled();
       expect(result).toHaveLength(2);
       expect(result[0]).toBeInstanceOf(BoletoEntity);

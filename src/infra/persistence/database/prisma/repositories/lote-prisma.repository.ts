@@ -1,7 +1,7 @@
 import { LoteRepositoryPort } from '@/core/ports/repositories';
 import { Injectable } from '@nestjs/common';
 import { PrismaService } from '../connection';
-import { LoteEntity } from '@/core/domain/entities';
+import { LoteEntity } from '../../../../../core/domain/entities';
 
 @Injectable()
 class LoteRepository implements LoteRepositoryPort {

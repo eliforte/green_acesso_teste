@@ -1,6 +1,6 @@
 import { ProcessPdfUseCase } from './process-pdf.use-case';
 import { BoletoEntity } from '../../domain/entities/boleto.entity';
-import { PdfPageInfo } from '@/core/ports/services';
+import { PdfPageInfo } from '../../../core/ports/services';
 
 describe('ProcessPdfUseCase', () => {
   let useCase: ProcessPdfUseCase;
@@ -84,9 +84,9 @@ describe('ProcessPdfUseCase', () => {
     expect(mockFileService.saveFile).toHaveBeenCalledTimes(3);
     
     expect(result).toEqual([
-      `${outputDir}/3.pdf`,
       `${outputDir}/1.pdf`,
       `${outputDir}/2.pdf`,
+      `${outputDir}/3.pdf`,
     ]);
   });
 

@@ -1,7 +1,7 @@
-import { LoteEntity } from '@/core/domain/entities';
 import { LoteRepository } from './lote-prisma.repository';
 import { Test, TestingModule } from '@nestjs/testing';
 import { PrismaService } from '../connection';
+import { LoteEntity } from '../../../../../core/domain/entities';
 
 describe('LoteRepository', () => {
   let repository: LoteRepository;

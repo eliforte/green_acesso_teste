@@ -1,6 +1,6 @@
 class BoletoEntity {
   public readonly id?: number;
-  public nome_sacado: string;
+  private _nome_sacado: string;
   private _valor: number;
   protected _id_lote: number;
   private _linha_digitavel: string;
@@ -20,9 +20,20 @@ class BoletoEntity {
     this.nome_sacado = props.nome_sacado;
     this.valor = props.valor;
     this.linha_digitavel = props.linha_digitavel;
-    this._id_lote = props.id_lote;
+    this.id_lote = props.id_lote;
     this.ativo = props.ativo ?? true;
     this.criado_em = props.criado_em ?? new Date();
+  }
+
+  get nome_sacado(): string {
+    return this._nome_sacado;
+  }
+    
+  set nome_sacado(value: string) {
+    if (!value || value.trim() === '') {
+      throw new Error('Nome do sacado não pode ser vazio');
+    }
+    this._nome_sacado = value;
   }
 
   get valor(): number {

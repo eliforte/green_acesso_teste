@@ -1,126 +1,168 @@
 import { BoletoEntity } from './boleto.entity';
 
 describe('BoletoEntity', () => {
-  describe('constructor', () => {
-    it('should create a valid boleto entity with all properties', () => {
-      const boleto = new BoletoEntity({
-        id: 1,
-        nome_sacado: 'JOSE DA SILVA',
-        id_lote: 3,
-        valor: 182.54,
-        linha_digitavel: '123456123456123456',
-        ativo: true,
-        criado_em: new Date('2023-01-01'),
-      });
-
-      expect(boleto.id).toBe(1);
-      expect(boleto.nome_sacado).toBe('JOSE DA SILVA');
-      expect(boleto.id_lote).toBe(3);
-      expect(boleto.valor).toBe(182.54);
-      expect(boleto.linha_digitavel).toBe('123456123456123456');
-      expect(boleto.ativo).toBe(true);
-      expect(boleto.criado_em).toEqual(new Date('2023-01-01'));
+  it('should create a valid boleto entity', () => {
+    const boleto = new BoletoEntity({
+      nome_sacado: 'João Silva',
+      id_lote: 1,
+      valor: 100.50,
+      linha_digitavel: '12345678901234567890'
     });
 
-    it('should create a valid boleto entity with default values', () => {
-      const boleto = new BoletoEntity({
-        nome_sacado: 'JOSE DA SILVA',
-        id_lote: 3,
-        valor: 182.54,
-        linha_digitavel: '123456123456123456',
-      });
-
-      expect(boleto.id).toBeUndefined();
-      expect(boleto.nome_sacado).toBe('JOSE DA SILVA');
-      expect(boleto.id_lote).toBe(3);
-      expect(boleto.valor).toBe(182.54);
-      expect(boleto.linha_digitavel).toBe('123456123456123456');
-      expect(boleto.ativo).toBe(true);
-      expect(boleto.criado_em).toBeInstanceOf(Date);
-    });
+    expect(boleto).toBeDefined();
+    expect(boleto.nome_sacado).toBe('João Silva');
+    expect(boleto.id_lote).toBe(1);
+    expect(boleto.valor).toBe(100.50);
+    expect(boleto.linha_digitavel).toBe('12345678901234567890');
+    expect(boleto.ativo).toBe(true);
+    expect(boleto.criado_em).toBeInstanceOf(Date);
   });
 
-  describe('validation', () => {
-    it('should throw error when nome_sacado is empty', () => {
-      expect(() => {
-        new BoletoEntity({
-          nome_sacado: '',
-          id_lote: 3,
-          valor: 182.54,
-          linha_digitavel: '123456123456123456',
-        });
-      }).toThrow('Nome do sacado não pode ser vazio');
+  it('should create a boleto with all properties', () => {
+    const date = new Date('2023-01-01');
+    const boleto = new BoletoEntity({
+      id: 123,
+      nome_sacado: 'Maria Oliveira',
+      id_lote: 2,
+      valor: 200.75,
+      linha_digitavel: '09876543210987654321',
+      ativo: false,
+      criado_em: date
     });
 
-    it('should throw error when id_lote is invalid', () => {
-      expect(() => {
-        new BoletoEntity({
-          nome_sacado: 'JOSE DA SILVA',
-          id_lote: 0,
-          valor: 182.54,
-          linha_digitavel: '123456123456123456',
-        });
-      }).toThrow('ID do lote deve ser válido');
-    });
-
-    it('should throw error when valor is <= 0', () => {
-      expect(() => {
-        new BoletoEntity({
-          nome_sacado: 'JOSE DA SILVA',
-          id_lote: 3,
-          valor: 0, // Invalid value
-          linha_digitavel: '123456123456123456',
-        });
-      }).toThrow('Valor do boleto deve ser maior que zero');
-    });
-
-    it('should throw error when linha_digitavel is empty', () => {
-      expect(() => {
-        new BoletoEntity({
-          nome_sacado: 'JOSE DA SILVA',
-          id_lote: 3,
-          valor: 182.54,
-          linha_digitavel: '',
-        });
-      }).toThrow('Linha digitável não pode ser vazia');
-    });
+    expect(boleto.id).toBe(123);
+    expect(boleto.nome_sacado).toBe('Maria Oliveira');
+    expect(boleto.id_lote).toBe(2);
+    expect(boleto.valor).toBe(200.75);
+    expect(boleto.linha_digitavel).toBe('09876543210987654321');
+    expect(boleto.ativo).toBe(false);
+    expect(boleto.criado_em).toBe(date);
   });
 
-  describe('setters', () => {
-    let boleto: BoletoEntity;
-
-    beforeEach(() => {
-      boleto = new BoletoEntity({
-        nome_sacado: 'JOSE DA SILVA',
+  it('should throw error when nome_sacado is empty', () => {
+    expect(() => {
+      new BoletoEntity({
+        nome_sacado: '',
         id_lote: 3,
         valor: 182.54,
-        linha_digitavel: '123456123456123456',
+        linha_digitavel: '123456123456123456'
       });
+    }).toThrow('Nome do sacado não pode ser vazio');
+
+    expect(() => {
+      new BoletoEntity({
+        nome_sacado: '   ',
+        id_lote: 3,
+        valor: 182.54,
+        linha_digitavel: '123456123456123456'
+      });
+    }).toThrow('Nome do sacado não pode ser vazio');
+  });
+
+  it('should throw error when valor is less than or equal to zero', () => {
+    expect(() => {
+      new BoletoEntity({
+        nome_sacado: 'José Santos',
+        id_lote: 3,
+        valor: 0,
+        linha_digitavel: '12345678901234567890'
+      });
+    }).toThrow('Valor do boleto deve ser maior que zero');
+
+    expect(() => {
+      new BoletoEntity({
+        nome_sacado: 'José Santos',
+        id_lote: 3,
+        valor: -10,
+        linha_digitavel: '12345678901234567890'
+      });
+    }).toThrow('Valor do boleto deve ser maior que zero');
+  });
+
+  it('should throw error when id_lote is less than or equal to zero', () => {
+    expect(() => {
+      new BoletoEntity({
+        nome_sacado: 'Ana Paula',
+        id_lote: 0,
+        valor: 150,
+        linha_digitavel: '12345678901234567890'
+      });
+    }).toThrow('ID do lote deve ser maior que zero');
+
+    expect(() => {
+      new BoletoEntity({
+        nome_sacado: 'Ana Paula',
+        id_lote: -5,
+        valor: 150,
+        linha_digitavel: '12345678901234567890'
+      });
+    }).toThrow('ID do lote deve ser maior que zero');
+  });
+
+  it('should throw error when linha_digitavel is empty', () => {
+    expect(() => {
+      new BoletoEntity({
+        nome_sacado: 'Pedro Costa',
+        id_lote: 4,
+        valor: 300,
+        linha_digitavel: ''
+      });
+    }).toThrow('Linha digitável não pode ser vazia');
+
+    expect(() => {
+      new BoletoEntity({
+        nome_sacado: 'Pedro Costa',
+        id_lote: 4,
+        valor: 300,
+        linha_digitavel: '   '
+      });
+    }).toThrow('Linha digitável não pode ser vazia');
+  });
+
+  it('should update properties correctly', () => {
+    const boleto = new BoletoEntity({
+      nome_sacado: 'Carlos Pereira',
+      id_lote: 5,
+      valor: 250,
+      linha_digitavel: '12345678901234567890'
     });
 
-    it('should update nome_sacado', () => {
-      boleto.nome_sacado = 'MARCOS ROBERTO';
-      expect(boleto.nome_sacado).toBe('MARCOS ROBERTO');
+    boleto.nome_sacado = 'Carlos Pereira Silva';
+    boleto.valor = 300;
+    boleto.id_lote = 6;
+    boleto.linha_digitavel = '09876543210987654321';
+
+    expect(boleto.nome_sacado).toBe('Carlos Pereira Silva');
+    expect(boleto.valor).toBe(300);
+    expect(boleto.id_lote).toBe(6);
+    expect(boleto.linha_digitavel).toBe('09876543210987654321');
+  });
+
+  it('should throw error when updating nome_sacado to empty string', () => {
+    const boleto = new BoletoEntity({
+      nome_sacado: 'Marcos Oliveira',
+      id_lote: 7,
+      valor: 175.50,
+      linha_digitavel: '12345678901234567890'
     });
 
-    it('should update id_lote', () => {
-      boleto.id_lote = 6;
-      expect(boleto.id_lote).toBe(6);
+    expect(() => {
+      boleto.nome_sacado = '';
+    }).toThrow('Nome do sacado não pode ser vazio');
+
+    expect(() => {
+      boleto.nome_sacado = '   ';
+    }).toThrow('Nome do sacado não pode ser vazio');
+  });
+
+  it('should validate boleto correctly', () => {
+    const boleto = new BoletoEntity({
+      nome_sacado: 'Julia Santos',
+      id_lote: 8,
+      valor: 425.75,
+      linha_digitavel: '12345678901234567890'
     });
 
-    it('should update valor', () => {
-      boleto.valor = 200;
-      expect(boleto.valor).toBe(200);
-    });
-
-    it('should update linha_digitavel', () => {
-      boleto.linha_digitavel = '987654321987654321';
-      expect(boleto.linha_digitavel).toBe('987654321987654321');
-    });
-
-    it('should update ativo', () => {
-      boleto.ativo = false;
-      expect(boleto.ativo).toBe(false);
-    });
+    expect((boleto as any).validarBoleto()).toBe(true);
   });
 });
