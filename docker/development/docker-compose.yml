@@ -1,0 +1,52 @@
+services:
+  green_db:
+    image: postgres:16.0-alpine
+    container_name: green_db
+    tty: true
+    restart: always
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+      - ./volumes/init.sql:/docker-entrypoint-initdb.d/init.sql
+    networks:
+      - green_access_network
+    ports:
+      - 5437:5432
+    environment:
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=postgres
+      - POSTGRES_DB=green_db
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d green_db"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    
+  condominio-api:
+    container_name: condominio-api
+    tty: true
+    networks:
+      - green_access_network
+    depends_on:
+      - green_db
+    links:
+      - green_db
+    build:
+      context: ../..
+      dockerfile: docker/development/Dockerfile
+    ports:
+      - 3000:3000
+    volumes:
+      - ../../.:/usr/app/
+    env_file:
+      - ../../.env
+    environment:
+      - DATABASE_URL=postgresql://postgres:postgres@green_db:5432/green_db?schema=public
+
+networks:
+  green_access_network:
+    name: green_access_network
+    driver: bridge
+
+volumes:
+  pgdata:
+    driver: local

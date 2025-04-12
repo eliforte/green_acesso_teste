@@ -1,0 +1,168 @@
+name: Build
+on:
+  pull_request:
+    branches:
+      - main
+      - homolog
+    type: [opened, synchronize]
+
+jobs:
+  setup:
+    name: Setup and Cache Dependencies
+    runs-on: ubuntu-22.04
+    outputs:
+      cache-key: ${{ steps.cache-modules.outputs.cache-key }}
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Generate cache key
+        id: cache-modules
+        run: echo "cache-key=${{ runner.os }}-node-modules-${{ hashFiles('**/package-lock.json') }}" >> $GITHUB_OUTPUT
+
+      - name: Cache node_modules
+        id: cache-node-modules
+        uses: actions/cache@v3
+        with:
+          path: node_modules
+          key: ${{ steps.cache-modules.outputs.cache-key }}
+
+      - name: Install dependencies
+        if: steps.cache-node-modules.outputs.cache-hit != 'true'
+        run: npm i
+
+  commitlint:
+    needs: setup
+    name: Commitlint job
+    runs-on: ubuntu-22.04
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Restore node_modules cache
+        uses: actions/cache@v3
+        with:
+          path: node_modules
+          key: ${{ needs.setup.outputs.cache-key }}
+
+      - name: Check Commit
+        run: |
+          if [ "${{ github.event_name }}" == "pull_request" ]; then
+            npx commitlint --from ${{ github.event.pull_request.base.sha }} --to ${{ github.sha }} --verbose
+          else
+            npx commitlint --from HEAD~${{ github.event.commits.length || 1 }} --to ${{ github.sha }} --verbose
+          fi
+
+  format:
+    needs: [setup, commitlint]
+    name: Code Formatting
+    runs-on: ubuntu-22.04
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.head_ref }}
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Restore node_modules cache
+        uses: actions/cache@v3
+        with:
+          path: node_modules
+          key: ${{ needs.setup.outputs.cache-key }}
+
+      - name: Check code formatting
+        id: check-format
+        run: npx prettier --check "src/**/*.ts" "test/**/*.ts" || echo "format-needed=true" >> $GITHUB_OUTPUT
+
+      - name: Auto format code
+        if: github.event_name == 'pull_request' && steps.check-format.outputs.format-needed == 'true'
+        run: npx prettier --write "src/**/*.ts" "test/**/*.ts"
+
+      - name: Commit changes
+        if: github.event_name == 'pull_request' && steps.check-format.outputs.format-needed == 'true'
+        run: |
+          git config --global user.name "GitHub Actions"
+          git config --global user.email "actions@github.com"
+          git add .
+          git commit -m "style: auto-format code with prettier"
+          git push
+
+      - name: Report formatting errors
+        if: github.event_name != 'pull_request' && steps.check-format.outputs.format-needed == 'true'
+        run: |
+          npx prettier --check "src/**/*.ts" "test/**/*.ts" > prettier_results.txt || true
+          while IFS= read -r line; do
+            if [[ $line == *"/"* ]]; then
+              file=$(echo "$line" | cut -d' ' -f1)
+              echo "::error file=$file::Formatting error in $file. Run 'npm run format' to fix."
+            fi
+          done < prettier_results.txt
+          exit 1
+
+  lint-code:
+    needs: [setup, format]
+    name: Lint
+    runs-on: ubuntu-22.04
+
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+      - uses: actions/setup-node@cdca7365b2dadb8aad0a33bc7601856ffabcc48e # v4.3.0
+        with:
+          node-version: 20
+      - run: yarn install
+      - uses: reviewdog/action-eslint@2fee6dd72a5419ff4113f694e2068d2a03bb35dd # v1.33.2
+        with:
+          reporter: github-check
+          eslint_flags: 'src/'
+
+  sonarcloud:
+    needs: [setup, lint-code]
+    name: SonarCloud Scan
+    runs-on: ubuntu-22.04
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          ref: ${{ github.head_ref || github.ref }}
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Restore node_modules cache
+        uses: actions/cache@v3
+        with:
+          path: node_modules
+          key: ${{ needs.setup.outputs.cache-key }}
+          restore-keys: ${{ runner.os }}-node-modules-
+
+      - name: Run tests with coverage
+        run: npx jest --coverage
+
+      - name: SonarCloud Scan
+        uses: SonarSource/sonarcloud-github-action@v2
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
