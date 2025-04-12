@@ -19,32 +19,47 @@ O projeto é construído seguindo os princípios da **Arquitetura Hexagonal** (t
 ### Estrutura de Pastas
 
 ```
-.
-├── .github/workflows         # CI/CD com GitHub Actions
-│   └── build.yaml            # Pipeline de build e testes
-├── .husky                    # Git hooks para garantir qualidade de código
-│   ├── commit-msg            # Validação de mensagens de commit
-│   └── pre-commit            # Verificações antes do commit
-├── docker                    # Configurações Docker
-│   └── development           # Ambiente de desenvolvimento
-│       ├── volumes           # Volumes para persistência
-│       ├── docker-compose.yml # Configuração dos serviços
-│       └── Dockerfile        # Configuração do container da API
-├── src                       # Código fonte da aplicação
-│   ├── core                  # Núcleo da aplicação
-│   │   ├── domain            # Entidades e regras de negócio
-│   │   │   ├── entities      # Entidades do domínio
-│   │   │   └── ports         # Interfaces para adaptadores
-│   │   └── application       # Casos de uso
-│   ├── infra                 # Infraestrutura
-│   │   ├── adapters          # Implementações de adaptadores
-│   │   └── persistence       # Repositórios e conexão com BD
-│   │       └── database
-│   │           └── prisma    # ORM e schema
-│   └── presentation          # Camada de apresentação
-│       └── http              # Controllers e DTOs
-└── config                    # Configurações da aplicação
-    └── utils                 # Utilitários como geração de PDFs
+├── .github
+│   └── workflows
+├── .husky
+├── docker
+├── src
+│   ├── config
+│   │   └── utils
+│   ├── core
+│   │   ├── application
+│   │   │   └── use-cases
+│   │   ├── common
+│   │   │   └── errors
+│   │   ├── domain
+│   │   │   └── entities
+│   │   └── ports
+│   │       ├── repositories
+│   │       └── services
+│   └── infra
+│       ├── persistence
+│       │   └── database
+│       │       └── prisma
+│       │           ├── connection.ts
+│       │           ├── migrations
+│       │           ├── repositories
+│       │           ├── schema.prisma
+│       │           └── seeds
+│       └── presentation
+│           └── http
+│               └── nestjs
+│                   ├── adapters
+│                   ├── config
+│                   │   └── docs
+│                   ├── filters
+│                   └── modules
+│                       ├── adapters
+│                       ├── controllers
+│                       │   ├── boletos
+│                       │   └── upload
+│                       ├── prisma
+│                       ├── repositories
+│                       └── use-cases
 ```
 
 ## 🔧 Tecnologias
