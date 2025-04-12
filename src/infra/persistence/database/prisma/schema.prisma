@@ -1,0 +1,45 @@
+generator client {
+  provider      = "prisma-client-js"
+  binaryTargets = ["native", "linux-musl-arm64-openssl-3.0.x"]
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Lote {
+  id        Int      @id @default(autoincrement())
+  nome      String   @db.VarChar(100)
+  ativo     Boolean  @default(true)
+  criado_em DateTime @default(now())
+  boletos   Boleto[]
+
+  @@map("lotes")
+}
+
+model Boleto {
+  id              Int      @id @default(autoincrement())
+  nome_sacado     String   @db.VarChar(255)
+  lote            Lote     @relation(fields: [id_lote], references: [id])
+  id_lote         Int
+  valor           Decimal  @db.Decimal(10, 2)
+  linha_digitavel String   @db.VarChar(255)
+  ativo           Boolean  @default(true)
+  criado_em       DateTime @default(now())
+
+  @@map("boletos")
+}
+
+model ErrorLogs {
+  id          String   @id @default(uuid())
+  route       String
+  method      String
+  requestBody Json?    @map("request_body")
+  query       Json?
+  timestamp   DateTime @default(now())
+  userId      String?  @map("user_id")
+  error       Json?
+
+  @@map("error_logs")
+}
