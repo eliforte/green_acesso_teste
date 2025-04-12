@@ -52,7 +52,7 @@ class PdfProcessorAdapter implements PdfProcessorPort {
   }
 
   async generateReport(
-    data: BoletoEntity[], 
+    data: BoletoEntity[],
     headers: Record<string, string>
   ): Promise<Buffer> {
     const pdfDoc = await PDFDocument.create();
@@ -60,53 +60,52 @@ class PdfProcessorAdapter implements PdfProcessorPort {
     const helveticaFont = await pdfDoc.embedFont(StandardFonts.Helvetica);
     const helveticaBoldFont = await pdfDoc.embedFont(StandardFonts.HelveticaBold);
     const { width, height } = page.getSize();
-    const margin = 50;
+    const margin = 40;
     let y = height - margin;
     const fontSize = 10;
     const headerFontSize = 16;
     const lineHeight = 20;
-    
+  
     page.drawText('Relatório de Boletos', {
       x: width / 2 - helveticaBoldFont.widthOfTextAtSize('Relatório de Boletos', headerFontSize) / 2,
-      y: y,
+      y,
       size: headerFontSize,
       font: helveticaBoldFont,
       color: rgb(0, 0, 0),
     });
-    
+  
     y -= lineHeight * 2;
-    
+  
     const keys = Object.keys(headers);
     const columnWidths: Record<string, number> = {};
-    const tableWidth = width - (2 * margin);
-    
+    const tableWidth = width - 2 * margin;
+  
     columnWidths['id'] = 40;
-    columnWidths['nome_sacado'] = 150;
+    columnWidths['nome_sacado'] = 120;
     columnWidths['id_lote'] = 60;
-    columnWidths['valor'] = 80;
-    columnWidths['linha_digitavel'] = 150;
-    
+    columnWidths['valor'] = 60;
+    columnWidths['linha_digitavel'] = 120;
+  
     let remainingWidth = tableWidth;
     let definedColumns = 0;
-    
-    keys.forEach(key => {
+  
+    keys.forEach((key) => {
       if (columnWidths[key]) {
         remainingWidth -= columnWidths[key];
         definedColumns++;
       }
     });
-    
+  
     const defaultColumnWidth = remainingWidth / Math.max(1, keys.length - definedColumns);
-    
-    keys.forEach(key => {
+  
+    keys.forEach((key) => {
       if (!columnWidths[key]) {
         columnWidths[key] = defaultColumnWidth;
       }
     });
-    
+  
     let xPos = margin;
-    
-    keys.forEach(key => {
+    keys.forEach((key) => {
       page.drawText(headers[key], {
         x: xPos,
         y,
@@ -116,29 +115,28 @@ class PdfProcessorAdapter implements PdfProcessorPort {
       });
       xPos += columnWidths[key];
     });
-    
+  
     y -= lineHeight;
-    
+  
     page.drawLine({
       start: { x: margin, y },
       end: { x: width - margin, y },
       thickness: 1,
       color: rgb(0, 0, 0),
     });
-    
+  
     y -= lineHeight / 2;
-    
+  
     for (const item of data) {
       if (y < margin + lineHeight) {
         page = pdfDoc.addPage([595.28, 841.89]);
         y = height - margin;
       }
-      
+  
       xPos = margin;
-      
       for (const key of keys) {
         let value = item[key as keyof BoletoEntity];
-        
+  
         if (key === 'valor' && typeof value === 'number') {
           value = value.toFixed(2).replace('.', ',');
         } else if (key === 'criado_em' && value instanceof Date) {
@@ -146,36 +144,29 @@ class PdfProcessorAdapter implements PdfProcessorPort {
         } else if (key === 'ativo') {
           value = value ? 'Sim' : 'Não';
         }
-        
+  
         let textValue = String(value || '-');
         const maxChars = Math.floor(columnWidths[key] / (fontSize * 0.5));
         if (textValue.length > maxChars) {
           textValue = textValue.substring(0, maxChars - 3) + '...';
         }
-        
-        let textX = xPos;
-        if (key === 'valor' || key === 'id' || key === 'id_lote') {
-          const textWidth = helveticaFont.widthOfTextAtSize(textValue, fontSize);
-          textX = xPos + columnWidths[key] - textWidth - 5;
-        }
-        
+  
         page.drawText(textValue, {
-          x: textX,
+          x: xPos,
           y,
           size: fontSize,
           font: helveticaFont,
           color: rgb(0, 0, 0),
         });
-        
+  
         xPos += columnWidths[key];
       }
-      
+  
       y -= lineHeight;
     }
-    
+  
     const currentDate = new Date().toLocaleDateString('pt-BR');
     const footerText = `Relatório gerado em: ${currentDate}`;
-    
     page.drawText(footerText, {
       x: margin,
       y: margin / 2,
@@ -183,9 +174,8 @@ class PdfProcessorAdapter implements PdfProcessorPort {
       font: helveticaFont,
       color: rgb(0, 0, 0),
     });
-    
+  
     const pdfBytes = await pdfDoc.save();
-    
     return Buffer.from(pdfBytes);
   }
 }
